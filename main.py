@@ -10,31 +10,31 @@ GEMINI_KEY = os.getenv("AI_API_KEY")
 
 # ============ دالة الذكاء الاصطناعي ============
 def ask_gemini(prompt):
-    """إرسال طلب لـ Google Gemini"""
-    # ✅ النموذج الصحيح
     url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
-    
     params = {"key": GEMINI_KEY}
-    data = {
-        "contents": [{"parts": [{"text": prompt}]}]
-    }
+    data = {"contents": [{"parts": [{"text": prompt}]}]}
     
     try:
         response = requests.post(url, params=params, json=data, timeout=15)
-        
         if response.status_code == 200:
             result = response.json()
             return result['candidates'][0]['content']['parts'][0]['text']
         else:
-            return f"️ خطأ من API: {response.status_code}\n{response.text}"
+            return f"⚠️ خطأ من API: {response.status_code}"
     except Exception as e:
-        return f"❌ خطأ في الاتصال: {str(e)}"
+        return f" خطأ في الاتصال: {str(e)}"
 
-# ============ دالة تلغرام ============
+# ============ دالة تلغرام (مع تشخيص) ============
 def send_message(text):
     url = f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage"
     payload = {"chat_id": CHAT_ID, "text": text, "parse_mode": "Markdown"}
+    
     response = requests.post(url, json=payload)
+    
+    # طباعة التفاصيل للتشخيص
+    print(f" حالة الاستجابة: {response.status_code}")
+    print(f"📝 رد تلغرام: {response.text}")
+    
     return response.status_code == 200
 
 # ============ أنواع المحتوى ============
@@ -50,22 +50,30 @@ def generate_quiz():
 # ============ النشر ============
 def auto_post():
     content_types = [
-        ("💡 نصيحة تقنية", generate_tip),
-        ("🔬 حقيقة علمية", generate_fact),
+        (" نصيحة تقنية", generate_tip),
+        (" حقيقة علمية", generate_fact),
         ("🧩 لغز تقني", generate_quiz)
     ]
     
     name, generator = random.choice(content_types)
-    print(f" جاري توليد: {name}")
+    print(f"📝 جاري توليد: {name}")
     
     content = generator()
+    
+    # طباعة المحتوى المولد
+    print("="*50)
+    print("📄 المحتوى المولد:")
+    print(content)
+    print("="*50)
+    
     today = datetime.now().strftime("%Y-%m-%d")
     full_post = f"*{name}*\n📅 {today}\n\n{content}"
     
+    print("📤 جاري الإرسال إلى تلغرام...")
     if send_message(full_post):
         print("✅ تم النشر بنجاح!")
     else:
-        print("❌ فشل النشر")
+        print("❌ فشل النشر - انسخ رد تلغرام أعلاه")
 
 if __name__ == "__main__":
     print("🚀 بدء تشغيل البوت...")
