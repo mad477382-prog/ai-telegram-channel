@@ -1,4 +1,5 @@
 import os
+import requests
 import random
 from datetime import datetime
 from openai import OpenAI
@@ -7,6 +8,9 @@ from openai import OpenAI
 TG_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 GROQ_KEY = os.getenv("GROQ_API_KEY")
+
+# ✅ حل المشكلة: ضبط متغير البيئة
+os.environ["OPENAI_API_KEY"] = GROQ_KEY
 
 # إعداد عميل Groq
 client = OpenAI(
@@ -25,7 +29,7 @@ def ask_groq(prompt):
         )
         return response.choices[0].message.content
     except Exception as e:
-        return f"️ خطأ: {str(e)}"
+        return f"⚠️ خطأ: {str(e)}"
 
 # ============ دالة تلغرام ============
 def send_message(text):
@@ -49,7 +53,7 @@ def auto_post():
     content_types = [
         ("💡 نصيحة تقنية", generate_tip),
         ("🔬 حقيقة علمية", generate_fact),
-        ("🧩 لغز تقني", generate_quiz)
+        (" لغز تقني", generate_quiz)
     ]
     
     name, generator = random.choice(content_types)
@@ -57,16 +61,15 @@ def auto_post():
     
     content = generator()
     
-    # طباعة المحتوى للتأكد
     print("="*50)
     print("📄 المحتوى:")
     print(content)
     print("="*50)
     
     today = datetime.now().strftime("%Y-%m-%d")
-    full_post = f"*{name}*\n📅 {today}\n\n{content}"
+    full_post = f"*{name}*\n {today}\n\n{content}"
     
-    print(" جاري النشر...")
+    print("📤 جاري النشر...")
     if send_message(full_post):
         print("✅ تم النشر بنجاح!")
     else:
