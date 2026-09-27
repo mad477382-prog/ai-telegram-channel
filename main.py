@@ -11,7 +11,7 @@ GEMINI_KEY = os.getenv("AI_API_KEY")
 # ============ دوال الذكاء الاصطناعي ============
 def ask_gemini(prompt):
     """إرسال طلب لـ Google Gemini والحصول على الرد"""
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
     
     data = {
         "contents": [{"parts": [{"text": prompt}]}]
@@ -20,9 +20,10 @@ def ask_gemini(prompt):
     response = requests.post(url, json=data)
     
     if response.status_code == 200:
-        return response.json()['candidates'][0]['content']['parts'][0]['text']
+        result = response.json()
+        return result['candidates'][0]['content']['parts'][0]['text']
     else:
-        return f"⚠️ خطأ: {response.status_code}"
+        return f"️ خطأ من API: {response.status_code}\n{response.text}"
 
 # ============ دوال تلغرام ============
 def send_message(text):
@@ -36,36 +37,27 @@ def send_message(text):
     }
     
     response = requests.post(url, json=payload)
-    return response.status_code == 200
-
-def send_photo(photo_url, caption=""):
-    """إرسال صورة إلى القناة"""
-    url = f"https://api.telegram.org/bot{TG_TOKEN}/sendPhoto"
     
-    payload = {
-        "chat_id": CHAT_ID,
-        "photo": photo_url,
-        "caption": caption,
-        "parse_mode": "Markdown"
-    }
-    
-    response = requests.post(url, json=payload)
-    return response.status_code == 200
+    if response.status_code == 200:
+        return True
+    else:
+        print(f"❌ خطأ تلغرام: {response.text}")
+        return False
 
 # ============ أنواع المحتوى ============
 def generate_tip():
     """توليد نصيحة تقنية"""
-    prompt = "اكتب نصيحة برمجية أو تقنية مفيدة في 3-4 أسطر باللغة العربية مع إيموجي مناسب وهاشتاق واحد"
+    prompt = "اكتب نصيحة برمجية أو تقنية مفيدة في 3-4 أسطر باللغة العربية مع إيموجي مناسب في البداية وهاشتاق واحد في النهاية"
     return ask_gemini(prompt)
 
 def generate_fact():
     """توليد حقيقة علمية"""
-    prompt = "اكتب حقيقة علمية أو تقنية غريبة ومثيرة للاهتمام في 3 أسطر باللغة العربية مع إيموجي"
+    prompt = "اكتب حقيقة علمية أو تقنية غريبة ومثيرة للاهتمام في 3 أسطر باللغة العربية مع إيموجي في البداية"
     return ask_gemini(prompt)
 
 def generate_quote():
     """توليد اقتباس تحفيزي"""
-    prompt = "اكتب اقتباساً تحفيزياً عن النجاح أو التعلم أو البرمجة مع ذكر قائله إن أمكن، باللغة العربية"
+    prompt = "اكتب اقتباساً تحفيزياً عن النجاح أو التعلم أو البرمجة مع ذكر قائله إن أمكن، باللغة العربية، في سطرين"
     return ask_gemini(prompt)
 
 def generate_quiz():
@@ -80,20 +72,17 @@ def auto_post():
         ("💡 نصيحة تقنية", generate_tip),
         ("🔬 حقيقة علمية", generate_fact),
         ("✨ اقتباس تحفيزي", generate_quote),
-        ("🧩 لغز تقني", generate_quiz)
+        (" لغز تقني", generate_quiz)
     ]
     
-    # اختيار نوع عشوائي
     name, generator = random.choice(content_types)
     
-    print(f"📝 جاري توليد: {name}")
+    print(f" جاري توليد: {name}")
     content = generator()
     
-    # إضافة التاريخ والعنوان
     today = datetime.now().strftime("%Y-%m-%d")
-    full_post = f"*{name}*\n {today}\n\n{content}"
+    full_post = f"*{name}*\n📅 {today}\n\n{content}"
     
-    # النشر
     if send_message(full_post):
         print("✅ تم النشر بنجاح!")
     else:
