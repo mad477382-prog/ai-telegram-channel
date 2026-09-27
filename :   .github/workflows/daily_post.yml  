@@ -1,0 +1,33 @@
+name: Daily AI Post
+
+on:
+  schedule:
+    # ينشر 3 مرات يومياً: 9 صباحاً، 3 ظهراً، 9 مساءً (بتوقيت مكة)
+    - cron: '0 6 * * *'    # 9 صباحاً
+    - cron: '0 12 * * *'   # 3 ظهراً
+    - cron: '0 18 * * *'   # 9 مساءً
+  
+  workflow_dispatch:  # للتشغيل اليدوي
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run bot
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+        run: python main.py
