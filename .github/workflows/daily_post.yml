@@ -1,32 +1,34 @@
-name: Daily AI Post
+name: Daily Cinema Post
 
 on:
   schedule:
-    - cron: '0 6 * * *'
-    - cron: '0 12 * * *'
-    - cron: '0 18 * * *'
-  
+    - cron: "0 6 * * *"
+    - cron: "0 12 * * *"
+    - cron: "0 17 * * *"
   workflow_dispatch:
+    inputs:
+      wing:
+        description: "اتركه فارغاً للتدوير التلقائي"
+        required: false
+        default: ""
 
 jobs:
   post:
     runs-on: ubuntu-latest
-    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.11"
+          cache: pip
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+      - run: pip install -r requirements.txt
 
       - name: Run bot
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          WING: ${{ github.event.inputs.wing }}
         run: python main.py
