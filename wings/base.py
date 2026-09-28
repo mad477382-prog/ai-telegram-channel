@@ -36,11 +36,22 @@ def pick_era() -> str:
     return random.choice(ERAS)
 
 
+def get_api_key() -> str:
+    key = os.getenv("OPENROUTER_API_KEY", "").strip()
+    print(f"[debug] key length={len(key)}, starts with sk-or: {key.startswith('sk-or')}")
+    if not key.startswith("sk-or"):
+        raise RuntimeError(
+            "OPENROUTER_API_KEY غير صالح أو فارغ، أعد لصقه في GitHub Secrets"
+        )
+    return key
+
+
 def ask_ai(user_prompt: str, temperature: float = 0.9,
            max_tokens: int = 700, retries: int = 3) -> str:
+    api_key = get_api_key()
     client = OpenAI(
         base_url="https://openrouter.ai/api/v1",
-        api_key=os.environ["OPENROUTER_API_KEY"],
+        api_key=api_key,
     )
     last_error = None
     for attempt in range(1, retries + 1):
