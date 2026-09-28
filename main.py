@@ -1,84 +1,55 @@
 import os
+import sys
+from datetime import datetime, timezone
+
 import requests
-import random
-from datetime import datetime
-from openai import OpenAI
 
-# ============ الإعدادات ============
-TG_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
-OPENROUTER_KEY = os.getenv("OPENROUTER_API_KEY")
+from wings import WINGS
 
-# التحقق من وجود المفتاح
-if not OPENROUTER_KEY:
-    print("❌ خطأ: مفتاح OPENROUTER_API_KEY غير موجود في GitHub Secrets!")
-    exit(1)
+TELEGRAM_LIMIT = 4096
 
-print(f"✅ تم العثور على مفتاح OpenRouter: {OPENROUTER_KEY[:15]}...")
 
-# إعداد عميل OpenRouter
-client = OpenAI(
-    api_key=OPENROUTER_KEY,
-    base_url="https://openrouter.ai/api/v1"
-)
+def choose_wing():
+    forced = os.getenv("WING", "").strip()
+    if forced:
+        if forced not in WINGS:
+            sys.exit(f"جناح غير معروف: {forced}. المتاح: {', '.join(WINGS)}")
+        return WINGS[forced]
 
-# ============ دالة الذكاء الاصطناعي ============
-def ask_ai(prompt):
-    try:
-        response = client.chat.completions.create(
-            model="meta-llama/llama-3-8b-instruct:free",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.7,
-            max_tokens=300
-        )
-        return response.choices[0].message.content
-    except Exception as e:
-        return f"⚠️ خطأ: {str(e)}"
+    now = datetime.now(timezone.utc)
+    slot = 0 if now.hour < 10 else 1 if now.hour < 15 else 2
+    names = list(WINGS)
+    index = (now.timetuple().tm_yday * 3 + slot) % len(names)
+    return WINGS[names[index]]
 
-# ============ دالة تلغرام ============
-def send_message(text):
-    url = f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage"
-    payload = {"chat_id": CHAT_ID, "text": text, "parse_mode": "Markdown"}
-    response = requests.post(url, json=payload)
-    return response.status_code == 200
 
-# ============ أنواع المحتوى ============
-def generate_tip():
-    return ask_ai("اكتب نصيحة برمجية أو تقنية مفيدة في 3 أسطر بالعربية مع إيموجي في البداية وهاشتاق واحد في النهاية.")
+def send_to_telegram(text: str) -> None:
+    token = os.environ["TELEGRAM_BOT_TOKEN"]
+    chat_id = os.environ["TELEGRAM_CHAT_ID"]
+    if len(text) > TELEGRAM_LIMIT:
+        text = text[: TELEGRAM_LIMIT - 1] + "…"
+    r = requests.post(
+        f"https://api.telegram.org/bot{token}/sendMessage",
+        json={
+            "chat_id": chat_id,
+            "text": text,
+            "parse_mode": "HTML",
+            "disable_web_page_preview": True,
+        },
+        timeout=30,
+    )
+    if not r.ok:
+        raise RuntimeError(f"Telegram error {r.status_code}: {r.text}")
 
-def generate_fact():
-    return ask_ai("اكتب حقيقة علمية أو تقنية غريبة ومثيرة في 3 أسطر بالعربية مع إيموجي في البداية.")
 
-def generate_quiz():
-    return ask_ai("اكتب لغزاً تقنياً ممتعاً مع 4 خيارات (أ، ب، ج، د) بالعربية. لا تذكر الإجابة الآن.")
+def main():
+    wing = choose_wing()
+    print(f"الجناح المختار: {wing.NAME}")
+    text = wing.generate()
+    print(text)
+    send_to_telegram(text)
+    print("تم النشر بنجاح ✅")
 
-# ============ النشر ============
-def auto_post():
-    content_types = [
-        ("💡 نصيحة تقنية", generate_tip),
-        ("🔬 حقيقة علمية", generate_fact),
-        ("🧩 لغز تقني", generate_quiz)
-    ]
-    
-    name, generator = random.choice(content_types)
-    print(f" جاري توليد: {name}")
-    
-    content = generator()
-    
-    print("="*50)
-    print("📄 المحتوى:")
-    print(content)
-    print("="*50)
-    
-    today = datetime.now().strftime("%Y-%m-%d")
-    full_post = f"*{name}*\n📅 {today}\n\n{content}"
-    
-    print("📤 جاري النشر...")
-    if send_message(full_post):
-        print("✅ تم النشر بنجاح!")
-    else:
-        print("❌ فشل النشر")
 
 if __name__ == "__main__":
-    print("🚀 بدء تشغيل البوت (OpenRouter)...")
-    auto_post()
+    main()
