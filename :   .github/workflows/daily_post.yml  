@@ -2,12 +2,12 @@ name: Daily AI Post
 
 on:
   schedule:
-    # ينشر 3 مرات يومياً: 9 صباحاً، 3 ظهراً، 9 مساءً (بتوقيت مكة)
-    - cron: '0 6 * * *'    # 9 صباحاً
-    - cron: '0 12 * * *'   # 3 ظهراً
-    - cron: '0 18 * * *'   # 9 مساءً
+    # ينشر 3 مرات يومياً (بتوقيت UTC)
+    - cron: '0 6 * * *'
+    - cron: '0 12 * * *'
+    - cron: '0 18 * * *'
   
-  workflow_dispatch:  # للتشغيل اليدوي
+  workflow_dispatch:
 
 jobs:
   post:
@@ -15,12 +15,12 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Install dependencies
         run: pip install -r requirements.txt
@@ -29,5 +29,5 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: python main.py
