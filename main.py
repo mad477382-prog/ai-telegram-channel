@@ -16,7 +16,7 @@ if not OPENROUTER_KEY:
 
 print(f"✅ تم العثور على مفتاح OpenRouter: {OPENROUTER_KEY[:15]}...")
 
-# إعداد عميل OpenRouter (متوافق مع OpenAI)
+# إعداد عميل OpenRouter
 client = OpenAI(
     api_key=OPENROUTER_KEY,
     base_url="https://openrouter.ai/api/v1"
@@ -26,7 +26,7 @@ client = OpenAI(
 def ask_ai(prompt):
     try:
         response = client.chat.completions.create(
-            model="meta-llama/llama-3-8b-instruct:free",  # نموذج مجاني
+            model="meta-llama/llama-3-8b-instruct:free",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
             max_tokens=300
@@ -61,7 +61,7 @@ def auto_post():
     ]
     
     name, generator = random.choice(content_types)
-    print(f"📝 جاري توليد: {name}")
+    print(f" جاري توليد: {name}")
     
     content = generator()
     
@@ -80,5 +80,5 @@ def auto_post():
         print("❌ فشل النشر")
 
 if __name__ == "__main__":
-    print(" بدء تشغيل البوت (OpenRouter)...")
+    print("🚀 بدء تشغيل البوت (OpenRouter)...")
     auto_post()
