@@ -52,4 +52,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(f"::error title=فشل البوت::{type(e).__name__}: {e}")
+        raise
