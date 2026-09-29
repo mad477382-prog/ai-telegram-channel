@@ -1,6 +1,6 @@
-from . import cinema_quiz, movie_facts, movie_recommendations
+from . import daily_poll, daily_quiz, shocking_fact
 
 WINGS = {
     w.NAME: w
-    for w in (movie_facts, cinema_quiz, movie_recommendations)
+    for w in (daily_quiz, shocking_fact, daily_poll)
 }
