@@ -1,15 +1,15 @@
-from .base import ask_ai, pick_era, pick_genre, safe
+from .base import ask_ai, pick_topic, safe
 
-NAME = "cinema_quiz"
+NAME = "daily_quiz"
 
 
 def generate() -> str:
-    genre, era = pick_genre(), pick_era()
-    prompt = f"""ضع سؤال مسابقة سينمائي واحداً بأربعة خيارات، متوسط الصعوبة،
-عن أفلام أو مسلسلات من نوع «{genre}» ومن فترة «{era}».
+    topic = pick_topic()
+    prompt = f"""ضع سؤال ثقافة عامة واحداً بأربعة خيارات، متوسط الصعوبة،
+من مجال «{topic}».
 
 الشروط:
-- سؤال واحد فقط، وإجابته صحيحة ومؤكدة.
+- سؤال واحد فقط، وإجابته صحيحة ومؤكدة 100%.
 - ضع الإجابة الصحيحة في مكان عشوائي بين الخيارات.
 - التنسيق حرفياً (بدون أي زيادة):
 السؤال: ...
@@ -17,18 +17,18 @@ def generate() -> str:
 ب) ...
 ج) ...
 د) ...
-الإجابة: (الحرف واسم الخيار)
+الإجابة: (الحرف واسم الخيار) - (جملة قصيرة توضح لماذا)
 """
-    raw = ask_ai(prompt, temperature=0.9, max_tokens=400)
+    raw = ask_ai(prompt, temperature=0.8, max_tokens=350)
 
     if "الإجابة:" in raw:
         question, answer = raw.split("الإجابة:", 1)
         question = question.replace("السؤال:", "").strip()
         return (
-            "🧠 <b>تحدي اليوم السينمائي</b>\n\n"
+            "🧠 <b>سؤال اليوم</b>\n\n"
             f"{safe(question)}\n\n"
             "👇 اضغط لإظهار الإجابة:\n"
             f"<tg-spoiler>{safe(answer)}</tg-spoiler>\n\n"
-            "#تحدي_سينمائي"
+            "#سؤال_اليوم"
         )
-    return f"🧠 <b>تحدي اليوم السينمائي</b>\n\n{safe(raw)}\n\n#تحدي_سينمائي"
+    return f"🧠 <b>سؤال اليوم</b>\n\n{safe(raw)}\n\n#سؤال_اليوم"
