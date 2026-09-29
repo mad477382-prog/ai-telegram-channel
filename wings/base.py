@@ -9,35 +9,25 @@ from openai import OpenAI
 BASE_URL = "https://openrouter.ai/api/v1"
 
 SYSTEM_PROMPT = (
-    "أنت محرر محتوى محترف ومتخصص حصراً في السينما والأفلام والمسلسلات، "
-    "تكتب لقناة تلغرام عربية اسمها «تحديات سينمائية». "
-    "اكتب دائماً بلغة عربية فصحى مبسطة وجذابة. "
-    "لا تخترع معلومات: إن لم تكن متأكداً من معلومة فاختر فيلماً أو حقيقة تعرفها جيداً. "
+    "أنت محرر محتوى محترف لقناة تلغرام عربية عامة ومنوعات. "
+    "تكتب بلغة عربية فصحى مبسطة وجذابة ومختصرة. "
+    "لا تخترع معلومات: اختر فقط معلومات أو أسئلة تعرفها بيقين تام. "
     "التزم بالتنسيق المطلوب حرفياً ولا تضف مقدمات أو شروحات خارج المطلوب."
 )
 
-GENRES = [
-    "الخيال العلمي", "الإثارة والتشويق", "الجريمة", "الرعب", "الدراما",
-    "الكوميديا", "الحركة", "الرسوم المتحركة", "الحرب", "السيرة الذاتية",
-    "الغموض", "الأفلام الوثائقية", "الويسترن", "الرومانسية", "الفانتازيا",
-]
-
-ERAS = [
-    "الأربعينيات والخمسينيات", "الستينيات", "السبعينيات", "الثمانينيات",
-    "التسعينيات", "الألفية (2000-2009)", "العقد الماضي (2010-2019)",
-    "السنوات الأخيرة",
+TOPICS = [
+    "الجغرافيا والدول", "التاريخ", "العلوم والفضاء", "جسم الإنسان",
+    "الحيوانات والطبيعة", "الاختراعات والتكنولوجيا", "الرياضة",
+    "الطعام والثقافات", "اللغات", "الفن والموسيقى", "علم النفس",
+    "المحيطات والبحار", "الآثار والحضارات القديمة",
 ]
 
 PREFERRED = ["llama", "gemma", "qwen", "gpt-oss", "mistral", "deepseek", "nemotron"]
 EXCLUDED = ["coder", "vision", "-vl", "audio", "guard", "embed", "image"]
 
 
-def pick_genre() -> str:
-    return random.choice(GENRES)
-
-
-def pick_era() -> str:
-    return random.choice(ERAS)
+def pick_topic() -> str:
+    return random.choice(TOPICS)
 
 
 def get_api_key() -> str:
@@ -50,7 +40,6 @@ def get_api_key() -> str:
 
 
 def free_models(api_key: str, limit: int = 6) -> list:
-    """يجلب النماذج المجانية المتاحة الآن ويرتبها حسب التفضيل."""
     try:
         r = requests.get(
             f"{BASE_URL}/models",
@@ -81,8 +70,8 @@ def free_models(api_key: str, limit: int = 6) -> list:
     return [mid for _, _, mid in found[:limit]]
 
 
-def ask_ai(user_prompt: str, temperature: float = 0.9,
-           max_tokens: int = 700, retries: int = 2) -> str:
+def ask_ai(user_prompt: str, temperature: float = 0.7,
+           max_tokens: int = 500, retries: int = 2) -> str:
     api_key = get_api_key()
     client = OpenAI(base_url=BASE_URL, api_key=api_key)
 
